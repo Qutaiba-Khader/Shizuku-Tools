@@ -4,12 +4,21 @@ A minimal Shizuku-powered Android app that instantly force-stops the current for
 
 ## Features
 
-- **App launcher** - Tap to force-stop whatever is in the foreground
-- **Home screen shortcut** - Long-press the app icon, drag "Force Stop" to home
-- **Home screen widget** - 1x1 red X button widget
-- **Quick Settings tile** - "Force Stop" tile in the notification pull-down panel
+- **App launcher** — tap to force-stop whatever is in the foreground
+- **Home screen shortcut** — long-press the app icon, drag "Force Stop" to home
+- **Home screen widget** — 1x1 red X button widget
+- **Quick Settings tile** — "Force Stop" tile in the notification pull-down panel
+- **Settings** — long-press app icon → "Settings", or via App Info → App Preferences
 
-All four methods do the same thing: detect the foreground app and force-stop it.
+## Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Show Confirmation | On | Ask before force stopping (off = instant kill) |
+| Show Toast | On | Show "Stopped: AppName" notification |
+| Vibrate | On | Haptic feedback after stopping |
+| Dialog Position | Center | Top / Center / Bottom placement of confirmation dialog |
+| Shizuku Status | — | Live indicator showing Shizuku running state and permission |
 
 ## How It Works
 
@@ -19,8 +28,9 @@ All four methods do the same thing: detect the foreground app and force-stop it.
    - `mFocusedApp` from window manager
    - `mResumedActivity` from activity manager
    - Recent tasks list
-3. Force-stops the detected app via `IActivityManager.forceStopPackage()` (binder call) with shell fallback to `am force-stop`
-4. Shows a toast confirmation and exits
+3. If confirmation is enabled, shows a dialog with the app name and a red X icon
+4. Force-stops via `IActivityManager.forceStopPackage()` (binder call) with shell fallback to `am force-stop`
+5. Optional toast and haptic feedback, then exits
 
 ## Safety
 

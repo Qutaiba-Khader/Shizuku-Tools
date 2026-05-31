@@ -11,4 +11,15 @@
             android:targetPackage="com.forcestop.app"
             android:targetClass="com.forcestop.app.ShortcutActivity" />
     </shortcut>
+    <shortcut
+        android:shortcutId="settings"
+        android:enabled="true"
+        android:icon="@drawable/ic_settings"
+        android:shortcutShortLabel="@string/settings_label"
+        android:shortcutLongLabel="@string/settings_label">
+        <intent
+            android:action="android.intent.action.APPLICATION_PREFERENCES"
+            android:targetPackage="com.forcestop.app"
+            android:targetClass="com.forcestop.app.SettingsActivity" />
+    </shortcut>
 </shortcuts>

@@ -3,5 +3,6 @@
     <string name="app_name">Force Stop</string>
     <string name="shortcut_label">Force Stop</string>
     <string name="shortcut_long_label">Force Stop Foreground App</string>
+    <string name="settings_label">Settings</string>
     <string name="widget_description">Tap to force stop the current foreground app</string>
 </resources>

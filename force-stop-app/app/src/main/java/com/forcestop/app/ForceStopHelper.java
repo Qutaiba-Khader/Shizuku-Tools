@@ -1,7 +1,11 @@
 package com.forcestop.app;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -36,39 +40,61 @@ public class ForceStopHelper {
             "moe.shizuku.privileged.api"
     ));
 
-    public static void forceStopForeground(Context context) {
-        if (!Shizuku.pingBinder()) {
-            showToast(context, "Shizuku not running");
-            return;
-        }
-
-        if (Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            showToast(context, "Shizuku permission not granted");
-            return;
-        }
+    public static String findForegroundPackage() {
+        if (!Shizuku.pingBinder()) return null;
+        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) return null;
 
         try {
             String pkg = detectForegroundPackage();
-            if (pkg == null || pkg.isEmpty()) {
-                showToast(context, "No foreground app found");
-                return;
+            if (pkg == null || pkg.isEmpty()) return null;
+            if (SKIP_PACKAGES.contains(pkg) || pkg.startsWith("com.android.launcher")) return null;
+            return pkg;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String getAppLabel(Context context, String packageName) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            return pm.getApplicationLabel(
+                    pm.getApplicationInfo(packageName, 0)).toString();
+        } catch (Exception e) {
+            return packageName;
+        }
+    }
+
+    public static void forceStop(Context context, String packageName) {
+        try {
+            forceStopViaAm(packageName);
+
+            SharedPreferences prefs = context.getSharedPreferences(
+                    SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE);
+
+            if (prefs.getBoolean(SettingsActivity.KEY_TOAST, true)) {
+                showToast(context, "Stopped: " + getAppLabel(context, packageName));
             }
 
-            if (SKIP_PACKAGES.contains(pkg) || pkg.startsWith("com.android.launcher")) {
-                showToast(context, "Won't stop: " + pkg);
-                return;
+            if (prefs.getBoolean(SettingsActivity.KEY_VIBRATE, true)) {
+                vibrate(context);
             }
-
-            forceStopViaAm(pkg);
-            showToast(context, "Stopped: " + pkg);
         } catch (Exception e) {
             showToast(context, "Error: " + e.getMessage());
         }
     }
 
+    private static void vibrate(Context context) {
+        try {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null && v.hasVibrator()) {
+                v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     private static void forceStopViaAm(String pkg) throws Exception {
         try {
-            // Try IActivityManager.forceStopPackage via ShizukuBinderWrapper first
             Class<?> iamClass = Class.forName("android.app.IActivityManager");
             Class<?> iamStub = Class.forName("android.app.IActivityManager$Stub");
             Method asInterface = iamStub.getMethod("asInterface", IBinder.class);
@@ -77,39 +103,31 @@ public class ForceStopHelper {
             Method forceStop = iamClass.getMethod("forceStopPackage", String.class, int.class);
             forceStop.invoke(iam, pkg, 0);
         } catch (Exception e) {
-            // Fallback to shell command
             execShell("am force-stop " + pkg);
         }
     }
 
     private static String detectForegroundPackage() throws Exception {
-        // Method 1: mCurrentFocus from window manager (most reliable)
         String pkg = fromCurrentFocus();
         if (pkg != null) return pkg;
 
-        // Method 2: mFocusedApp from window manager
         pkg = fromFocusedApp();
         if (pkg != null) return pkg;
 
-        // Method 3: mResumedActivity from activity manager
         pkg = fromResumedActivity();
         if (pkg != null) return pkg;
 
-        // Method 4: recent tasks (our activity is excluded from recents)
-        pkg = fromRecentTasks();
-        return pkg;
+        return fromRecentTasks();
     }
 
     private static String fromCurrentFocus() throws Exception {
         String output = execShell("dumpsys window displays");
-        // mCurrentFocus=Window{abc u0 com.example.app/com.example.app.MainActivity}
         Pattern p = Pattern.compile("mCurrentFocus=Window\\{[^}]*\\s([\\w.]+)/");
         Matcher m = p.matcher(output);
         while (m.find()) {
             String found = m.group(1);
             if (!OWN_PACKAGE.equals(found)) return found;
         }
-        // Alt: mCurrentFocus=Window{abc u0 com.example.app}
         p = Pattern.compile("mCurrentFocus=Window\\{[^}]*\\s([\\w.]+)\\}");
         m = p.matcher(output);
         while (m.find()) {
@@ -159,7 +177,6 @@ public class ForceStopHelper {
     }
 
     private static String execShell(String command) throws Exception {
-        // Use reflection since Shizuku.newProcess is @RestrictTo
         Method newProcess = Shizuku.class.getDeclaredMethod("newProcess",
                 String[].class, String[].class, String.class);
         newProcess.setAccessible(true);
@@ -176,7 +193,7 @@ public class ForceStopHelper {
         return sb.toString();
     }
 
-    private static void showToast(Context context, String msg) {
+    static void showToast(Context context, String msg) {
         try {
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
         } catch (Exception ignored) {
