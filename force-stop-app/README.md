@@ -22,15 +22,19 @@ A minimal Shizuku-powered Android app that instantly force-stops the current for
 
 ## How It Works
 
-1. Transparent activity launches (invisible, excluded from recents)
-2. Detects the foreground app using multiple fallback methods:
-   - `mCurrentFocus` from window manager (primary)
+1. Transparent activity launches (invisible, excluded from recents, no window preview)
+2. Detects the foreground app using 7 fallback methods:
+   - `mFocusedActivity` from activity manager (primary, Android 12+)
+   - `mFocusedWindow` from window manager
+   - `mCurrentFocus` from window manager
    - `mFocusedApp` from window manager
-   - `mResumedActivity` from activity manager
-   - Recent tasks list
-3. If confirmation is enabled, shows a dialog with the app name and a red X icon
-4. Force-stops via `IActivityManager.forceStopPackage()` (binder call) with shell fallback to `am force-stop`
-5. Optional toast and haptic feedback, then exits
+   - `topResumedActivity` / `mResumedActivity`
+   - `dumpsys activity top` task name
+   - Recent tasks (3 sub-patterns: A=uid:pkg, baseActivity, realActivity)
+3. Multi-pattern regex parser extracts package names from various Android dumpsys formats
+4. If confirmation is enabled, shows a centered white dialog with red X icon
+5. Force-stops via `IActivityManager.forceStopPackage()` (binder call) with shell fallback to `am force-stop`
+6. Optional toast and haptic feedback, then exits
 
 ## Safety
 
