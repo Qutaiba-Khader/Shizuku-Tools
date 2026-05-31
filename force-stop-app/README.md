@@ -45,9 +45,22 @@ The app will **not** force-stop:
 - Settings
 - Shizuku itself
 
+## Known Limitation and Planned Fix
+
+**Issue:** The transparent Activity can steal focus from the target app before detection runs. This race condition may cause some apps to not be detected.
+
+**Planned fix — Service-based architecture:**
+
+1. Widget/Shortcut/QS tile starts a background Service (not an Activity)
+2. Service runs detection — it never takes focus, so the target app remains the true foreground app
+3. If no confirmation needed: force-stop, toast, finish
+4. If confirmation needed: Service passes the detected package name to the transparent Activity via intent extra; Activity only shows the dialog (no detection needed)
+
+This eliminates the race condition entirely since Services do not participate in the window focus system.
+
 ## Requirements
 
-- Android 8.0+ (API 26)
+- Android 8.0 or higher (API 26)
 - Shizuku running with ADB or root privileges
 - Tested on Samsung Galaxy S25 Ultra (Android 16, One UI 8.5) with Shizuku 13.6.0 (thedjchi fork)
 
