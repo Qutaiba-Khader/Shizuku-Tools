@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Force Stop</string>
+    <string name="shortcut_label">Force Stop</string>
+    <string name="shortcut_long_label">Force Stop Foreground App</string>
+    <string name="widget_description">Tap to force stop the current foreground app</string>
+</resources>

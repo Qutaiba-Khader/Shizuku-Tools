@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="force_stop"
+        android:enabled="true"
+        android:icon="@drawable/ic_close"
+        android:shortcutShortLabel="@string/shortcut_label"
+        android:shortcutLongLabel="@string/shortcut_long_label">
+        <intent
+            android:action="com.forcestop.app.FORCE_STOP"
+            android:targetPackage="com.forcestop.app"
+            android:targetClass="com.forcestop.app.ShortcutActivity" />
+    </shortcut>
+</shortcuts>

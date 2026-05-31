@@ -13,8 +13,11 @@ captures/
 .externalNativeBuild/
 .cxx/
 *.aab
-*.apk
 output-metadata.json
+
+# APKs (except releases folder)
+*.apk
+!releases/*.apk
 
 # IntelliJ
 *.iml

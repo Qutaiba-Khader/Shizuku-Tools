@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#E53935" />
+            <size android:width="64dp" android:height="64dp" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/ic_close_widget"
+        android:gravity="center"
+        android:width="40dp"
+        android:height="40dp" />
+</layer-list>
